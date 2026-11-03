@@ -230,7 +230,7 @@ def build_prompt(plan: PlanInput, check: dict | None = None, config_name: str = 
         "conflicts or warnings before changing the server.",
         f"{step + 1}. Run it again without `--dry-run`.",
         f"{step + 2}. Results go to `{out_dir}` on the machine running the skill (folder 0700, files 0600): "
-        "`vps_{ip}_info.txt`, `result.json`, `clash_config.yaml`, QR codes. The server keeps its own "
+        f"`vps_{plan.ip}_info.txt`, `result.json`, `clash_config.yaml`, QR codes. The server keeps its own "
         "state in `/etc/vps-skill/state.json`, so re-runs keep the same links.",
         f"{step + 3}. Give me the panel URL, node links and the YAML path. After a reboot, follow the skill's "
         "Reboot Rules (read `/var/lib/vps-skill/boot-status` after 3 minutes).",

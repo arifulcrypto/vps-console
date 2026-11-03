@@ -105,6 +105,7 @@ def test_prompt_has_no_secrets_by_default():
     assert "hunter2" not in text and "tok123" not in text
     assert "export VPS_SSH_PASS" in text and "export CF_TOKEN" in text
     assert "./output/203.0.113.10/" in text
+    assert "vps_203.0.113.10_info.txt" in text
 
 
 def test_prompt_with_secrets_and_lxc():
