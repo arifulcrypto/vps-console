@@ -8,7 +8,7 @@ from .i18n import translate
 
 
 def _ts(value) -> str:
-    return dt.datetime.fromtimestamp(float(value), dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC") if value else ""
+    return dt.datetime.fromtimestamp(float(value), dt.UTC).strftime("%Y-%m-%d %H:%M UTC") if value else ""
 
 
 def to_markdown(job: dict) -> str:

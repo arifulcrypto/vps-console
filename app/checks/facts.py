@@ -22,11 +22,15 @@ sec swap; swapon --show=NAME,SIZE,USED --bytes --noheadings 2>/dev/null
 sec swappiness; sysctl -n vm.swappiness 2>/dev/null
 sec disk; df -B1 --output=size,used,avail / 2>/dev/null | tail -n1
 sec uptime; cut -d' ' -f1 /proc/uptime; cut -d' ' -f1-3 /proc/loadavg
-sec net; sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null; sysctl -n net.core.default_qdisc 2>/dev/null; sysctl -n net.ipv4.tcp_available_congestion_control 2>/dev/null
+sec net
+for k in net.ipv4.tcp_congestion_control net.core.default_qdisc net.ipv4.tcp_available_congestion_control; do
+  sysctl -n "$k" 2>/dev/null
+done
 sec ip; ip -o addr show scope global 2>/dev/null | awk '{print $2, $3, $4}'
 sec listen; ss -H -ltnup 2>/dev/null
 sec services
-for s in x-ui xray v2ray sing-box hysteria-server nginx caddy apache2 httpd docker snap.lxd.daemon incus realm ufw firewalld fail2ban vps-skill-bootcheck.timer vps-lxc-bootcheck.timer; do
+for s in x-ui xray v2ray sing-box hysteria-server nginx caddy apache2 httpd docker snap.lxd.daemon incus \
+         realm ufw firewalld fail2ban vps-skill-bootcheck.timer vps-lxc-bootcheck.timer; do
   printf '%s %s %s\n' "$s" "$(systemctl is-active "$s" 2>/dev/null)" "$(systemctl is-enabled "$s" 2>/dev/null)"
 done
 sec versions
@@ -44,7 +48,8 @@ command -v python3 >/dev/null && v python3 python3 --version
 command -v snap >/dev/null && echo "snap=yes"
 [ -x /root/.acme.sh/acme.sh ] && echo "acme.sh=installed"
 sec legacy
-for d in /etc/v2ray /etc/xray /usr/local/etc/xray /etc/caddy/233boy /usr/local/x-ui /etc/x-ui /etc/sing-box /etc/hysteria /etc/vps-skill /var/lib/vps-lxc /etc/realm; do
+for d in /etc/v2ray /etc/xray /usr/local/etc/xray /etc/caddy/233boy /usr/local/x-ui /etc/x-ui /etc/sing-box \
+         /etc/hysteria /etc/vps-skill /var/lib/vps-lxc /etc/realm; do
   [ -e "$d" ] && echo "$d"
 done
 sec bootstatus; cat /var/lib/vps-skill/boot-status 2>/dev/null | head -n3

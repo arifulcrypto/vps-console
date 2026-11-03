@@ -32,7 +32,7 @@ def _fmt_bytes(value) -> str:
 def _fmt_time(ts) -> str:
     if not ts:
         return ""
-    return dt.datetime.fromtimestamp(float(ts), dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return dt.datetime.fromtimestamp(float(ts), dt.UTC).strftime("%Y-%m-%d %H:%M UTC")
 
 
 templates.env.filters["bytes"] = _fmt_bytes

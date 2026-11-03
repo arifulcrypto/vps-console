@@ -77,6 +77,9 @@ MIGRATIONS = [
 ]
 
 
+JOB_COLUMNS = {"status", "progress", "result_json", "finished_at"}
+
+
 class Database:
     def __init__(self, path: Path):
         self.path = path
@@ -129,8 +132,11 @@ class Database:
     async def update_job(self, job_id: str, **fields: Any) -> None:
         if "result" in fields:
             fields["result_json"] = json.dumps(fields.pop("result"), ensure_ascii=False)
-        cols = ", ".join(f"{k} = ?" for k in fields)
-        await self.execute(f"UPDATE jobs SET {cols} WHERE id = ?", (*fields.values(), job_id))
+        unknown = set(fields) - JOB_COLUMNS
+        if unknown:
+            raise ValueError(f"unknown job fields {unknown}")
+        cols = ", ".join(f"{k} = ?" for k in fields)  # names come from JOB_COLUMNS, values are bound
+        await self.execute(f"UPDATE jobs SET {cols} WHERE id = ?", (*fields.values(), job_id))  # noqa: S608
 
     async def get_job(self, job_id: str) -> dict[str, Any] | None:
         row = await self.fetchone("SELECT * FROM jobs WHERE id = ?", (job_id,))

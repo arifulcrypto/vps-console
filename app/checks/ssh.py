@@ -64,7 +64,7 @@ async def connect(target: SSHTarget, timeout: float = 15) -> asyncssh.SSHClientC
         )
     except asyncssh.PermissionDenied as exc:
         raise SSHError("auth_failed", "Login refused: wrong user, password or key.") from exc
-    except (asyncio.TimeoutError, TimeoutError) as exc:
+    except TimeoutError as exc:
         raise SSHError("timeout", "No SSH answer in time. Check the IP, port and firewall.") from exc
     except ConnectionRefusedError as exc:
         raise SSHError("refused", "Connection refused: nothing listens on that port.") from exc
@@ -91,6 +91,6 @@ async def run(conn: asyncssh.SSHClientConnection, command: str, timeout: float =
               stdin: str | None = None) -> CommandResult:
     try:
         result = await asyncio.wait_for(conn.run(command, input=stdin, check=False), timeout=timeout)
-    except (asyncio.TimeoutError, TimeoutError):
+    except TimeoutError:
         return CommandResult("", "timed out", None)
     return CommandResult(str(result.stdout or ""), str(result.stderr or ""), result.exit_status)

@@ -22,7 +22,7 @@ async def tcp_connect(host: str, port: int, timeout: float = 4) -> float | None:
     start = time.perf_counter()
     try:
         _, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout)
-    except (OSError, asyncio.TimeoutError, TimeoutError):
+    except (OSError, TimeoutError):
         return None
     elapsed = (time.perf_counter() - start) * 1000
     writer.close()
@@ -40,7 +40,7 @@ async def icmp_ping(host: str, count: int = 3) -> dict:
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         )
         out, _ = await asyncio.wait_for(proc.communicate(), timeout=count * 3 + 5)
-    except (OSError, asyncio.TimeoutError, TimeoutError):
+    except (OSError, TimeoutError):
         return {"ok": None, "loss": None, "avg": None}
     return parse_ping(out.decode(errors="replace"))
 
@@ -54,7 +54,7 @@ def parse_ping(text: str) -> dict:
 
 async def from_here(host: str, ports: list[int]) -> dict:
     ping, *conns = await asyncio.gather(icmp_ping(host), *(tcp_connect(host, p) for p in ports))
-    return {"icmp": ping, "ports": {str(p): ms for p, ms in zip(ports, conns)}}
+    return {"icmp": ping, "ports": {str(p): ms for p, ms in zip(ports, conns, strict=False)}}
 
 
 def probe_script(host: str, ports: list[int], tls_ports: dict[int, str]) -> str:
@@ -74,7 +74,8 @@ def probe_script(host: str, ports: list[int], tls_ports: dict[int, str]) -> str:
         s = shlex.quote(sni or host)
         lines.append(
             f"r=$(timeout 7 openssl s_client -connect {h}:{int(p)} -servername {s} </dev/null 2>&1); "
-            f"if echo \"$r\" | grep -q 'BEGIN CERTIFICATE\\|Protocol version\\|Cipher is'; then echo \"TLS {int(p)} ok\"; "
+            f"if echo \"$r\" | grep -q 'BEGIN CERTIFICATE\\|Protocol version\\|Cipher is'; "
+            f"then echo \"TLS {int(p)} ok\"; "
             f"elif echo \"$r\" | grep -qi 'reset\\|errno=104'; then echo \"TLS {int(p)} reset\"; "
             f"else echo \"TLS {int(p)} fail\"; fi"
         )

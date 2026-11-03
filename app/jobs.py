@@ -6,7 +6,7 @@ import asyncio
 import logging
 import secrets
 import time
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from .db import Database
 

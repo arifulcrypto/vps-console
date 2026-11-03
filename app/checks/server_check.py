@@ -43,7 +43,7 @@ async def tls_handshake(host: str, port: int, sni: str = "", timeout: float = 6)
             asyncio.open_connection(host, port, ssl=ctx, server_hostname=sni or None), timeout)
     except ConnectionResetError:
         return "reset"
-    except (OSError, ssl.SSLError, asyncio.TimeoutError, TimeoutError):
+    except (OSError, ssl.SSLError, TimeoutError):
         return "fail"
     writer.close()
     return "ok"
