@@ -63,7 +63,7 @@ async def check_start(
         mode = "deep" if mode == "deep" else "quick"
         target = None
         if host:
-            h = v.host(host)
+            h = await v.resolve_public(v.host(host))
             if not skip_ssh:
                 target = SSHTarget(host=h, port=v.port(ssh_port, "ssh_port"), username=v.username(ssh_user),
                                    password=password if auth == "password" else None,
@@ -82,7 +82,7 @@ async def check_start(
         )
         if not (host or opts.domain or opts.cf_token or opts.proxies):
             raise v.InvalidInput("host", "nothing_to_check")
-        bare_host = v.host(host) if host and not target else ""
+        bare_host = h if host and not target else ""
         target_label = target.host if target else (bare_host or opts.domain or "proxies")
     except v.InvalidInput as exc:
         probe_rows = await db.fetchall("SELECT name, region FROM probes WHERE enabled = 1")

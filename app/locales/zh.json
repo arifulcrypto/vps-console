@@ -364,5 +364,6 @@
   "download": "下载",
   "delete": "删除",
   "save": "保存",
-  "confirm_delete": "确定删除？"
+  "confirm_delete": "确定删除？",
+  "err.unresolvable": "无法解析"
 }

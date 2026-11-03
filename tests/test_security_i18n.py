@@ -72,7 +72,7 @@ def test_template_keys_exist():
     en = _catalog("en")
     missing = set()
     for tpl in (ROOT / "templates").rglob("*.html"):
-        for key in re.findall(r"t\('([a-z0-9_.]+)'", tpl.read_text(encoding="utf-8")):
+        for key in re.findall(r"(?<![\w.])t\('([a-z0-9_.]+)'", tpl.read_text(encoding="utf-8")):
             if not key.endswith(".") and not key.endswith("_") and key not in en:
                 missing.add(f"{tpl.name}:{key}")
     assert not missing, sorted(missing)

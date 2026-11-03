@@ -63,8 +63,12 @@ class PlanInput:
 
 
 def output_dir(plan: PlanInput) -> str:
+    if plan.save_location == "custom" and plan.custom_path:
+        return plan.custom_path.replace("{ip}", plan.ip)
     template = SAVE_LOCATIONS.get(plan.save_location, SAVE_LOCATIONS["skill_default"])
-    return template.format(ip=plan.ip, custom=plan.custom_path or f"./output/{plan.ip}/")
+    if "{custom}" in template:
+        template = SAVE_LOCATIONS["skill_default"]
+    return template.format(ip=plan.ip)
 
 
 def _secret(plan: PlanInput, key: str, env: str) -> str | None:

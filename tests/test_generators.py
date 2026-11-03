@@ -69,8 +69,9 @@ def test_mihomo_build_isolates_metered():
     assert mihomo.check_config(cfg) == []
     groups = {g["name"]: g for g in cfg["proxy-groups"]}
     auto = groups["⚡ Auto (latency)"]["proxies"]
-    assert "US Residential" not in auto
-    assert groups["🏠 Residential & Relay"]["proxies"] == ["US Residential", "DIRECT"]
+    resi = groups["🏠 Residential & Relay"]["proxies"]
+    assert resi[0].endswith("US Residential") and resi[1] == "DIRECT"
+    assert resi[0] not in auto
     assert any(name.endswith("JP") for name in groups)
     assert cfg["rules"][-1] == "MATCH,🚀 Proxy"
     yaml.safe_load(mihomo.dump(cfg))

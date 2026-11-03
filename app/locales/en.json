@@ -364,5 +364,6 @@
   "download": "Download",
   "delete": "Delete",
   "save": "Save",
-  "confirm_delete": "Delete this?"
+  "confirm_delete": "Delete this?",
+  "err.unresolvable": "does not resolve"
 }
