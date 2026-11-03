@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('gen.title') }}</h1>
+<p class="muted">{{ t('gen.intro') }}</p>
+{% if error %}<p class="alert bad">{{ t('field.' ~ error.field) }}: {{ t('err.' ~ error.code) }}</p>{% endif %}
+{% if form.get('job') %}<p class="alert info">{{ t('gen.from_job') }} <a href="/jobs/{{ form.job }}">{{ form.job }}</a></p>{% endif %}
+<form method="post" action="/generate" class="stack" data-remember-form="generate"{% if form %} data-prefilled{% endif %}>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="job" value="{{ form.get('job', '') }}">
+
+  <h2>{{ t('gen.protocols') }}</h2>
+  <fieldset class="seg">
+    {% for key in presets %}
+    <label class="opt"><input type="radio" name="preset" value="{{ key }}" data-remember data-toggle="preset" {{ 'checked' if form.get('preset', 'fast') == key }}>
+      <span><strong>{{ t('preset.' ~ key) }}</strong><small>{{ t('preset.' ~ key ~ '_desc') }}</small></span></label>
+    {% endfor %}
+  </fieldset>
+
+  <h2>{{ t('check.server') }}</h2>
+  <label>{{ t('field.ip') }}<input name="ip" required value="{{ form.get('ip', '') }}" data-remember></label>
+  <div class="row">
+    <label>{{ t('field.ssh_port') }}<input name="ssh_port" inputmode="numeric" value="{{ form.get('ssh_port', '22') }}" data-remember></label>
+    <label>{{ t('field.ssh_user') }}<input name="ssh_user" value="{{ form.get('ssh_user', 'root') }}" data-remember></label>
+  </div>
+  <fieldset class="seg compact">
+    <legend>{{ t('check.auth') }}</legend>
+    <label class="opt"><input type="radio" name="ssh_auth" value="password" checked data-remember data-toggle="sshauth"> {{ t('check.auth_password') }}</label>
+    <label class="opt"><input type="radio" name="ssh_auth" value="key" data-remember data-toggle="sshauth"> {{ t('check.auth_key') }}</label>
+  </fieldset>
+  <label data-show="sshauth=key" hidden>{{ t('field.ssh_key_path') }}<input name="ssh_key_path" placeholder="~/.ssh/id_ed25519" data-remember></label>
+
+  <h2>{{ t('gen.domain') }}</h2>
+  <label>{{ t('field.domain') }}<input name="domain" placeholder="node.example.com" value="{{ form.get('domain', '') }}" data-remember></label>
+  <p class="hint">{{ t('gen.domain_hint') }}</p>
+  <label data-show="preset=stealth443" hidden>{{ t('field.cdn_domain') }}<input name="cdn_domain" placeholder="cdn.example.com" data-remember></label>
+  <label class="check"><input type="checkbox" name="manage_dns" value="1" data-remember> {{ t('gen.manage_dns') }}</label>
+  <label>{{ t('field.cert_mode') }}<select name="cert_mode" data-remember><option value="http-01">HTTP-01</option><option value="dns-01">DNS-01 (Cloudflare)</option></select></label>
+  <label>{{ t('field.client_isp') }}<select name="client_isp" data-remember>
+    {% for isp in ('unicom', 'mobile', 'telecom', 'overseas') %}<option value="{{ isp }}">{{ t('carrier.' ~ isp) }}</option>{% endfor %}</select></label>
+
+  <details>
+    <summary>{{ t('gen.more') }}</summary>
+    <label class="check"><input type="checkbox" name="extra_vmess" value="1" data-remember> {{ t('gen.extra_vmess') }}</label>
+    <label class="check"><input type="checkbox" name="extra_trojan" value="1" data-remember> {{ t('gen.extra_trojan') }}</label>
+    <label>{{ t('field.exit_proxy') }}<input name="exit_proxy" placeholder="gw.provider.com:824" data-remember></label>
+    <label>{{ t('field.exit_protocol') }}<select name="exit_protocol" data-remember><option value="socks">SOCKS5</option><option value="http">HTTP</option></select></label>
+    <p class="hint">{{ t('gen.exit_hint') }}</p>
+    <label class="check"><input type="checkbox" name="panel_private" value="1" data-remember> {{ t('gen.panel_private') }}</label>
+    <label>{{ t('field.out_lang') }}<select name="out_lang" data-remember><option value="en">English</option><option value="zh">中文</option></select></label>
+  </details>
+
+  <details>
+    <summary>{{ t('gen.lxc') }}</summary>
+    <label class="check"><input type="checkbox" name="use_lxc" value="1" data-remember> {{ t('gen.use_lxc') }}</label>
+    <div class="row">
+      <label>{{ t('field.lxc_count') }}<input name="lxc_count" inputmode="numeric" value="2" data-remember></label>
+      <label>{{ t('field.lxc_memory_mb') }}<input name="lxc_memory_mb" inputmode="numeric" value="1024" data-remember></label>
+      <label>{{ t('field.lxc_disk_gb') }}<input name="lxc_disk_gb" inputmode="numeric" value="10" data-remember></label>
+    </div>
+    <div class="row">
+      <label>{{ t('field.traffic_limit_gb') }}<input name="traffic_limit_gb" inputmode="numeric" value="0" data-remember></label>
+      <label>{{ t('field.traffic_reset_day') }}<input name="traffic_reset_day" inputmode="numeric" value="1" data-remember></label>
+    </div>
+  </details>
+
+  <h2>{{ t('gen.save') }}</h2>
+  <fieldset class="seg">
+    {% for key, pathv in saves.items() %}
+    <label class="opt"><input type="radio" name="save_location" value="{{ key }}" data-remember data-toggle="save" {{ 'checked' if key == 'skill_default' }}>
+      <span><strong>{{ t('save.' ~ key) }}</strong><small><code>{{ pathv.replace('{ip}', '<ip>') if key != 'custom' else t('save.custom_desc') }}</code></small></span></label>
+    {% endfor %}
+  </fieldset>
+  <label data-show="save=custom" hidden>{{ t('field.custom_path') }}<input name="custom_path" placeholder="/root/vps/{ip}/" data-remember></label>
+  <p class="hint">{{ t('gen.save_hint') }}</p>
+
+  <details>
+    <summary>{{ t('gen.secrets') }}</summary>
+    <p class="hint">{{ t('gen.secrets_hint') }}</p>
+    <label class="check"><input type="checkbox" name="include_secrets" value="1"> {{ t('gen.include_secrets') }}</label>
+    <label>{{ t('field.password') }}<input name="ssh_pass" type="password" autocomplete="off"></label>
+    <label>{{ t('field.cf_token') }}<input name="cf_token" type="password" autocomplete="off"></label>
+    <div class="row">
+      <label>{{ t('field.exit_user') }}<input name="exit_user" autocomplete="off"></label>
+      <label>{{ t('field.exit_pass') }}<input name="exit_pass" type="password" autocomplete="off"></label>
+    </div>
+  </details>
+
+  <button class="btn primary big">{{ t('gen.go') }}</button>
+</form>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('conv.done', n=nodes|length) }}</h1>
+{% if problems %}<div class="alert warn"><strong>{{ t('conv.problems') }}</strong><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>{% endif %}
+{% if errors %}<details class="alert warn"><summary>{{ t('conv.skipped', n=errors|length) }}</summary><ul class="small">{% for e in errors %}<li class="wrap">{{ e }}</li>{% endfor %}</ul></details>{% endif %}
+
+{% if sub_url %}
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('conv.sub_url') }}</h2><button class="btn small" data-copy="#sub-url">{{ t('copy') }}</button></div>
+  <p class="code wrap" id="sub-url">{{ sub_url }}</p>
+  {% if sub_qr %}<img class="qr" src="{{ sub_qr }}" alt="QR">{% endif %}
+  <p class="hint">{{ t('conv.sub_hint') }}</p>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head"><h2>YAML</h2><button class="btn small" data-copy="#yaml">{{ t('copy') }}</button></div>
+  <pre class="code tall" id="yaml">{{ yaml }}</pre>
+  <a class="btn" href="/outputs/{{ out_id }}/config.yaml" download>{{ t('download') }} config.yaml</a>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('conv.links') }}</h2><button class="btn small" data-copy="#links">{{ t('copy') }}</button></div>
+  <pre class="code" id="links">{{ links|join('\n') }}</pre>
+  <a class="btn" href="/outputs/{{ out_id }}/links.txt" download>{{ t('download') }} links.txt</a>
+</section>
+
+{% if qrs %}
+<section class="panel">
+  <h2>{{ t('conv.qr') }}</h2>
+  <div class="qr-grid">
+  {% for n in nodes %}{% if qrs[loop.index0] %}
+    <figure><img class="qr" src="{{ qrs[loop.index0] }}" alt="QR {{ n.name }}"><figcaption>{{ n.name }}</figcaption></figure>
+  {% endif %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>{{ t('conv.nodes') }}</h2>
+  <table class="tbl"><thead><tr><th>{{ t('k.name') }}</th><th>{{ t('k.proto') }}</th><th>{{ t('k.server') }}</th></tr></thead>
+  <tbody>{% for n in nodes %}<tr><td>{{ n.name }}</td><td>{{ n.type }}</td><td class="wrap">{{ n.server }}:{{ n.port }}</td></tr>{% endfor %}</tbody></table>
+</section>
+<p><a href="/convert">{{ t('conv.again') }}</a></p>
+{% endblock %}

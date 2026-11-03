@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('nav.admin') }}</h1>
+{% if message %}<p class="alert ok">{{ t(message) }}</p>{% endif %}
+{% if error %}<p class="alert bad">{{ t(error) }}</p>{% endif %}
+
+<section class="panel">
+  <h2>{{ t('admin.probes') }}</h2>
+  <p class="hint">{{ t('admin.probes_intro') }}</p>
+  {% for p in probes %}
+  <div class="probe">
+    <form method="post" action="/admin/probes/{{ p.id }}/meta" class="stack">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <div class="row">
+        <label>{{ t('k.name') }}<input name="name" value="{{ p.name }}"></label>
+        <label>{{ t('field.region') }}<input name="region" value="{{ p.region }}"></label>
+      </div>
+      <dl class="kv small">
+        <dt>{{ t('k.server') }}</dt><dd>{{ p.username }}@{{ p.host }}:{{ p.port }}</dd>
+        <dt>{{ t('admin.auth') }}</dt><dd>{{ t('admin.auth_' ~ p.auth_type) }} · {{ t('admin.secret_set', when=(p.secret_set_at|time)) }}</dd>
+        <dt>{{ t('admin.hostkey') }}</dt><dd>{{ t('admin.pinned') if p.pinned else '–' }}</dd>
+      </dl>
+      <label class="check"><input type="checkbox" name="enabled" value="1" {{ 'checked' if p.enabled }}> {{ t('admin.enabled') }}</label>
+      <button class="btn small">{{ t('save') }}</button>
+    </form>
+    <div class="actions">
+      <form method="post" action="/admin/probes/{{ p.id }}/test"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small">{{ t('admin.test') }}</button></form>
+      <form method="post" action="/admin/probes/{{ p.id }}/delete" data-confirm="{{ t('admin.confirm_delete') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small danger">{{ t('delete') }}</button></form>
+    </div>
+    {% if test and test.id == p.id %}
+      {% if test.ok %}<p class="alert ok">{{ t('admin.test_ok', loc=test.loc, tools=test.tools|join(', ')) }}</p>
+      {% else %}<p class="alert bad">{{ t('ssh.' ~ test.code) }}</p>{% endif %}
+    {% endif %}
+    <details>
+      <summary>{{ t('admin.replace') }}</summary>
+      {% with pid=p.id, pf=p %}{% include "admin/probe_form.html" %}{% endwith %}
+    </details>
+  </div>
+  {% endfor %}
+  <details {{ 'open' if not probes or form }}>
+    <summary>{{ t('admin.add_probe') }}</summary>
+    {% with pid='', pf=form %}{% include "admin/probe_form.html" %}{% endwith %}
+  </details>
+</section>
+
+<section class="panel">
+  <h2>{{ t('admin.settings') }}</h2>
+  <form method="post" action="/admin/settings" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>{{ t('admin.gp_token') }}<input name="globalping_token" type="password" autocomplete="off" placeholder="{{ t('admin.secret_set', when=(gp_set|time)) if gp_set else t('admin.optional') }}"></label>
+    <p class="hint">{{ t('admin.gp_hint') }}</p>
+    {% if gp_set %}<label class="check"><input type="checkbox" name="clear_globalping" value="1"> {{ t('admin.gp_clear') }}</label>{% endif %}
+    <button class="btn">{{ t('save') }}</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>{{ t('admin.account') }}</h2>
+  <a class="btn" href="/account">{{ t('admin.change_pw') }}</a>
+</section>
+{% endblock %}

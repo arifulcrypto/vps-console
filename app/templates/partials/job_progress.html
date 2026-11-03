@@ -1,0 +1,4 @@
+<div class="progress" hx-get="/jobs/{{ job.id }}/status" hx-trigger="every 2s" hx-swap="outerHTML">
+  <span class="spinner" aria-hidden="true"></span>
+  <span>{{ t('progress.' ~ (job.progress or 'start')) }}</span>
+</div>

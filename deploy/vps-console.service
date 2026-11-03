@@ -1,0 +1,36 @@
+[Unit]
+Description=VPS Console (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=vpsconsole
+Group=vpsconsole
+WorkingDirectory=/opt/vps-console/src
+Environment=VPSC_DATA_DIR=/var/lib/vps-console
+Environment=VPSC_SECRET_DIR=/etc/vps-console
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=/etc/vps-console/app.env
+EnvironmentFile=-/etc/vps-console/version.env
+ExecStart=/opt/vps-console/env/bin/uvicorn --factory app.main:get_app --host 127.0.0.1 --port 8091 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header --log-level warning
+Restart=on-failure
+RestartSec=3
+
+# ping needs raw sockets; nothing else is granted.
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vps-console
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryMax=400M
+
+[Install]
+WantedBy=multi-user.target

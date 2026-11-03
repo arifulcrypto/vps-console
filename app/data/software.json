@@ -1,0 +1,32 @@
+{
+  "_source": "vps-lxc-skill docs/software-versions.md and docs/host-requirements.md. 'tested' means used with real traffic.",
+  "server": {
+    "x-ui": {"tested": "3.11.0", "url": "https://github.com/MHSanaei/3x-ui/releases"},
+    "xray": {"tested": "26.10.21", "url": "https://github.com/XTLS/Xray-core/releases"},
+    "lxd": {"tested": "5.21.9", "url": "https://snapcraft.io/lxd"},
+    "realm": {"tested": "2.9.6", "url": "https://github.com/zhboner/realm/releases"},
+    "sing-box": {"tested": "1.14.4", "url": "https://github.com/SagerNet/sing-box/releases"}
+  },
+  "clients": {
+    "mihomo": {"minimum": "1.19.9", "tested": "1.19.33", "url": "https://github.com/MetaCubeX/mihomo/releases"},
+    "clash-verge-rev": {"url": "https://github.com/clash-verge-rev/clash-verge-rev/releases"},
+    "flclash": {"url": "https://github.com/chen08209/FlClash/releases"},
+    "v2rayn": {"url": "https://github.com/2dust/v2rayN/releases"},
+    "v2rayng": {"url": "https://github.com/2dust/v2rayNG/releases"}
+  },
+  "os": {
+    "debian 13": {"end": "2030-06-30", "rank": "best"},
+    "ubuntu 24.04": {"end": "2029-05-31", "rank": "best"},
+    "ubuntu 26.04": {"end": "2031-05-31", "rank": "ok"},
+    "debian 12": {"end": "2028-06-30", "rank": "ok"},
+    "ubuntu 22.04": {"end": "2027-06-30", "rank": "old"},
+    "debian 11": {"end": "2026-08-31", "rank": "ended"},
+    "ubuntu 20.04": {"end": "2025-05-31", "rank": "ended"},
+    "ubuntu 18.04": {"end": "2023-05-31", "rank": "ended"}
+  },
+  "machine_sizes": [
+    {"containers": 1, "ram_gb": 1, "swap": "1 GB", "disk_gb": 10},
+    {"containers": 2, "ram_gb": 2, "swap": "1-2 GB", "disk_gb": 20},
+    {"containers": 4, "ram_gb": 4, "swap": "2 GB", "disk_gb": 30}
+  ]
+}

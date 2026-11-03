@@ -1,0 +1,12 @@
+{% if jobs %}
+<ul class="list">
+{% for j in jobs %}
+  <li><a href="/jobs/{{ j.id }}"><strong>{{ j.target }}</strong>
+    <span class="tag">{{ t('mode.' ~ j.mode) }}</span>
+    <span class="tag {{ 'ok' if j.status == 'done' else ('bad' if j.status in ('failed', 'interrupted') else 'info') }}">{{ t('status.' ~ j.status) }}</span>
+    <span class="muted small">{{ j.created_at|time }}</span></a></li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="muted">{{ t('dash.none') }}</p>
+{% endif %}

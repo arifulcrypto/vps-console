@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('nav.history') }}</h1>
+<p class="muted">{{ t('hist.intro') }}</p>
+
+<h2>{{ t('hist.checks') }}</h2>
+{% include "partials/job_list.html" %}
+
+<h2>{{ t('hist.outputs') }}</h2>
+{% if outputs %}
+<ul class="list">{% for o in outputs %}
+  <li class="split"><a href="/outputs/{{ o.id }}"><strong>{{ o.title }}</strong> <span class="tag">{{ t('out.' ~ o.kind) }}</span>
+    <span class="muted small">{{ o.created_at|time }}</span></a>
+    <form method="post" action="/outputs/{{ o.id }}/delete" data-confirm="{{ t('confirm_delete') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">{{ t('delete') }}</button></form></li>
+{% endfor %}</ul>
+{% else %}<p class="muted">{{ t('dash.none') }}</p>{% endif %}
+
+<h2>{{ t('hist.subs') }}</h2>
+{% if subs %}
+<ul class="list">{% for s in subs %}
+  <li class="split"><span><strong>{{ s.title }}</strong><br><code class="small wrap">{{ base }}/s/{{ s.token }}</code></span>
+    <form method="post" action="/subscriptions/{{ s.token }}/delete" data-confirm="{{ t('confirm_delete') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">{{ t('delete') }}</button></form></li>
+{% endfor %}</ul>
+{% else %}<p class="muted">{{ t('dash.none') }}</p>{% endif %}
+{% endblock %}

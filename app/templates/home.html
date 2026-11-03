@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>{{ t('home.title') }}</h1>
+  <p class="lead">{{ t('home.lead') }}</p>
+  <a class="btn primary" href="/login">{{ t('nav.login') }}</a>
+</section>
+<section class="cards">
+  <div class="card"><h3>{{ t('nav.check') }}</h3><p>{{ t('home.check') }}</p></div>
+  <div class="card"><h3>{{ t('nav.generate') }}</h3><p>{{ t('home.generate') }}</p></div>
+  <div class="card"><h3>{{ t('nav.convert') }}</h3><p>{{ t('home.convert') }}</p></div>
+</section>
+{% endblock %}

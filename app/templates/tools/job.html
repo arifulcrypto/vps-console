@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="wrap">{{ job.target }} <span class="tag">{{ t('mode.' ~ job.mode) }}</span></h1>
+<p class="muted small">{{ job.created_at|time }}{% if r.duration_s %} · {{ r.duration_s }} s{% endif %}</p>
+
+{% if job.status == 'running' %}
+  {% include "partials/job_progress.html" %}
+{% elif job.status != 'done' %}
+  <p class="alert bad">{{ t('status.' ~ job.status) }}{% if r.error %}: {{ t('err.' ~ r.error) }}{% endif %}</p>
+{% else %}
+<div class="actions">
+  <a class="btn primary" href="/generate?job={{ job.id }}">{{ t('job.to_prompt') }}</a>
+  <a class="btn" href="/jobs/{{ job.id }}/report.md" download>{{ t('job.dl_md') }}</a>
+  <a class="btn" href="/jobs/{{ job.id }}/report.json" download>JSON</a>
+</div>
+
+{% if r.ssh %}
+<section class="panel">
+  <h2>{{ t('job.ssh') }}</h2>
+  {% if r.ssh.ok %}<p><span class="dot ok"></span> {{ t('job.ssh_ok') }}</p>
+  {% else %}<p class="alert bad">{{ t('ssh.' ~ r.ssh.code) }}</p>{% endif %}
+</section>
+{% endif %}
+
+{% if r.findings %}
+<section class="panel">
+  <h2>{{ t('job.findings') }} <span class="tag {{ r.score }}">{{ t('score.' ~ r.score) }}</span></h2>
+  <ul class="findings">
+  {% for f in r.findings %}
+    <li class="{{ f.level }}"><span class="dot {{ f.level }}"></span><span>{{ t('f.' ~ f.code, **f.params) }}</span></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if r.facts %}{% set fx = r.facts %}
+<section class="panel">
+  <h2>{{ t('job.system') }}</h2>
+  <dl class="kv">
+    <dt>{{ t('k.os') }}</dt><dd>{{ fx.os.pretty_name }}</dd>
+    <dt>{{ t('k.kernel') }}</dt><dd>{{ fx.kernel }} · {{ fx.arch }}</dd>
+    <dt>{{ t('k.virt') }}</dt><dd>{{ fx.virt }}{% if fx.container != 'none' %} ({{ fx.container }}){% endif %}</dd>
+    <dt>{{ t('k.cpu') }}</dt><dd>{{ fx.cpu.count }} × {{ fx.cpu.model }}</dd>
+    <dt>{{ t('k.mem') }}</dt><dd>{{ fx.mem.total|bytes }} · {{ t('k.available') }} {{ fx.mem.available|bytes }}</dd>
+    <dt>{{ t('k.swap') }}</dt><dd>{{ fx.swap.total|bytes }} · {{ t('k.used') }} {{ fx.swap.used|bytes }} · swappiness {{ fx.swappiness }}</dd>
+    <dt>{{ t('k.disk') }}</dt><dd>{{ fx.disk.avail|bytes }} {{ t('k.free_of') }} {{ fx.disk.total|bytes }}</dd>
+    <dt>{{ t('k.tcp') }}</dt><dd>{{ fx.net.cc }} / {{ fx.net.qdisc }}</dd>
+    <dt>{{ t('k.uptime') }}</dt><dd>{{ (fx.uptime_s // 86400) }} d · load {{ fx.load }}</dd>
+    <dt>IP</dt><dd class="wrap">{{ (fx.ips.ipv4 + fx.ips.ipv6)|join(', ') }}</dd>
+  </dl>
+  {% if fx.versions %}
+  <h3>{{ t('job.software') }}</h3>
+  <ul class="chips">{% for k, val in fx.versions.items() %}<li>{{ k }} <strong>{{ val }}</strong></li>{% endfor %}</ul>
+  {% endif %}
+  {% if fx.services %}
+  <h3>{{ t('job.services') }}</h3>
+  <ul class="chips">{% for k, s in fx.services.items() %}<li class="{{ 'ok' if s.active == 'active' else 'muted' }}">{{ k }} · {{ s.active }}</li>{% endfor %}</ul>
+  {% endif %}
+  <details>
+    <summary>{{ t('job.listeners') }} ({{ fx.listeners|length }})</summary>
+    <table class="tbl"><thead><tr><th>{{ t('k.port') }}</th><th>{{ t('k.proto') }}</th><th>{{ t('k.addr') }}</th><th>{{ t('k.process') }}</th></tr></thead>
+    <tbody>{% for l in fx.listeners %}<tr class="{{ '' if l.public else 'muted' }}"><td>{{ l.port }}</td><td>{{ l.proto }}</td><td>{{ l.addr }}</td><td>{{ l.process }}</td></tr>{% endfor %}</tbody></table>
+  </details>
+</section>
+{% endif %}
+
+{% if r.ipinfo and r.ipinfo.ok %}{% set i = r.ipinfo %}
+<section class="panel">
+  <h2>{{ t('job.ip') }}</h2>
+  <dl class="kv">
+    <dt>IP</dt><dd>{{ i.ip }}</dd>
+    <dt>{{ t('k.location') }}</dt><dd>{{ i.city }}, {{ i.region }}, {{ i.country }}</dd>
+    <dt>{{ t('k.network') }}</dt><dd>{{ i.asn }} · {{ i.isp }}{% if i.org and i.org != i.isp %} · {{ i.org }}{% endif %}</dd>
+    <dt>{{ t('k.ip_type') }}</dt><dd><span class="tag">{{ t('kind.' ~ i.kind) }}</span></dd>
+  </dl>
+  <p class="hint">{{ t('job.ip_hint') }}</p>
+</section>
+{% endif %}
+
+{% if r.routes %}
+<section class="panel">
+  <h2>{{ t('job.routes') }}</h2>
+  <table class="tbl">
+    <thead><tr><th>{{ t('k.city') }}</th><th>{{ t('k.carrier') }}</th><th>{{ t('k.line') }}</th><th>RTT</th></tr></thead>
+    <tbody>
+    {% for rt in r.routes %}
+    <tr><td>{{ t('city.' ~ rt.city) }}</td><td>{{ t('carrier.' ~ rt.carrier) }}</td>
+      <td><span class="tag {{ 'ok' if rt.premium else '' }}">{{ t('line.' ~ rt.line) if rt.line in ('unknown', 'no_tool') else rt.line }}</span>{% if rt.detour %} <span class="tag warn">{{ t('job.detour') }}</span>{% endif %}</td>
+      <td>{{ '%.0f'|format(rt.rtt) ~ ' ms' if rt.rtt else '–' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <details><summary>{{ t('job.hops') }}</summary>
+  {% for rt in r.routes %}
+    <h4>{{ t('city.' ~ rt.city) }} · {{ t('carrier.' ~ rt.carrier) }}{% if rt.transit %} <span class="muted small">via {{ rt.transit|join(', ') }}</span>{% endif %}</h4>
+    <ol class="hops">{% for h in rt.hops %}<li>{{ h.ip or '*' }} <span class="muted">{{ h.asn }}</span> {% if h.rtt %}{{ '%.0f'|format(h.rtt) }} ms{% endif %}</li>{% endfor %}</ol>
+  {% endfor %}
+  </details>
+  <p class="hint">{{ t('job.routes_hint') }}</p>
+</section>
+{% endif %}
+
+{% if r.reach %}{% set rc = r.reach %}
+<section class="panel">
+  <h2>{{ t('job.reach') }}</h2>
+  <p class="verdict {{ 'ok' if rc.verdict == 'reachable' else ('info' if rc.verdict == 'no_china_data' else 'bad') }}">
+    {{ t('verdict.' ~ rc.verdict, ports=rc.ports|join(', ')) }}</p>
+  {% if rc.probe_error %}<p class="alert warn">{{ t('job.probe_error') }}: {{ t('ssh.' ~ rc.probe_error) }}</p>{% endif %}
+  <table class="tbl">
+    <thead><tr><th></th><th>{{ t('job.abroad') }}</th><th>{{ t('job.china') }}{% if rc.china %} <span class="muted small">({{ rc.china.source }})</span>{% endif %}</th></tr></thead>
+    <tbody>
+      <tr><td>ICMP</td><td>{{ '✓ %.0f ms'|format(rc.abroad.icmp.avg) if rc.abroad.icmp.ok and rc.abroad.icmp.avg else ('✓' if rc.abroad.icmp.ok else '✗') }}</td>
+        <td>{% if rc.china %}{{ '✓' if rc.china.icmp.ok else ('✗' if rc.china.icmp.ok is sameas false else '–') }}{% if rc.china.icmp.avg %} {{ '%.0f'|format(rc.china.icmp.avg) }} ms{% endif %}{% else %}–{% endif %}</td></tr>
+      {% for p in rc.ports_tested %}{% set ps = p|string %}
+      <tr><td>TCP {{ p }}</td>
+        <td>{{ ('✓ %.0f ms'|format(rc.abroad.ports[ps])) if rc.abroad.ports.get(ps) is not none else '✗' }}</td>
+        <td>{% if rc.china and ps in rc.china.ports %}{{ ('✓ %.0f ms'|format(rc.china.ports[ps])) if rc.china.ports[ps] is not none else '✗' }}{% else %}–{% endif %}</td></tr>
+      {% if ps in rc.abroad.get('tls', {}) %}
+      <tr><td>TLS {{ p }}</td><td>{{ rc.abroad.tls[ps] }}</td><td>{{ rc.china.tls.get(ps, '–') if rc.china else '–' }}</td></tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if rc.globalping %}
+  <details><summary>Globalping</summary>
+    {% for kind, m in rc.globalping.items() %}
+      <h4>{{ kind|upper }}{% if m.port %} {{ m.port }}{% endif %}</h4>
+      {% if m.ok %}
+      <ul class="plain small">{% for x in m.results %}<li>{{ x.city }} · {{ x.network }}: {{ ('%.0f ms'|format(x.avg)) if x.avg else '–' }}, loss {{ x.loss }}%</li>{% else %}<li class="muted">{{ t('job.gp_none') }}</li>{% endfor %}</ul>
+      {% else %}<p class="muted">{{ t('gp.' ~ m.error) }}</p>{% endif %}
+    {% endfor %}
+  </details>
+  {% endif %}
+  {% if r.forward_route %}
+  <details><summary>{{ t('job.forward') }}: {{ r.forward_route.line }}</summary>
+    <ol class="hops">{% for h in r.forward_route.hops %}<li>{{ h.ip or '*' }} <span class="muted">{{ h.asn }}</span> {% if h.rtt %}{{ '%.0f'|format(h.rtt) }} ms{% endif %}</li>{% endfor %}</ol>
+  </details>
+  {% endif %}
+  <h3>{{ t('job.manual') }}</h3>
+  <ul class="chips">{% for l in r.links %}<li><a href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.name }}</a></li>{% endfor %}</ul>
+  <p class="hint">{{ t('job.reach_hint') }}</p>
+</section>
+{% endif %}
+
+{% if r.cloudflare %}{% set cf = r.cloudflare %}
+<section class="panel">
+  <h2>Cloudflare</h2>
+  {% if cf.token_ok %}<p><span class="dot ok"></span> {{ t('cf.token_ok') }}</p>{% else %}<p class="alert bad">{{ t('cf.' ~ cf.error) }}</p>{% endif %}
+  {% if cf.zones %}<p class="small">{{ t('cf.zones') }}: {{ cf.zones|map(attribute='name')|join(', ') }}</p>{% endif %}
+  {% if cf.error and cf.token_ok %}<p class="alert warn">{{ t('cf.' ~ cf.error) }}</p>{% endif %}
+  {% if cf.zone %}
+  <dl class="kv">
+    <dt>{{ t('cf.zone') }}</dt><dd>{{ cf.zone }}</dd>
+    <dt>{{ t('cf.ssl') }}</dt><dd>{{ cf.ssl_mode or t('cf.ssl_unknown') }}</dd>
+    <dt>{{ t('cf.records') }}</dt><dd>{% for rec in cf.records %}{{ rec.type }} → {{ rec.content }} {{ '🟠' if rec.proxied else '⚪' }}<br>{% else %}{{ t('cf.no_records') }}{% endfor %}</dd>
+    <dt>{{ t('cf.live') }}</dt><dd>{{ cf.resolved|join(', ') or '–' }}{% if cf.proxied_live %} ({{ t('cf.via_cf') }}){% endif %}</dd>
+    {% if cf.points_to_target is not none %}<dt>{{ t('cf.target') }}</dt><dd>{{ '✓' if cf.points_to_target else '✗ ' ~ t('cf.not_target') }}</dd>{% endif %}
+  </dl>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if r.proxies %}
+<section class="panel">
+  <h2>{{ t('job.proxies') }}</h2>
+  {% for p in r.proxies %}
+  <div class="proxy">
+    <p class="wrap"><strong>{{ p.proxy }}</strong></p>
+    {% if p.ok %}{% set i = p.info %}
+    <dl class="kv">
+      <dt>{{ t('k.exit') }}</dt><dd>{{ p.exit_ips|unique|join(', ') }}</dd>
+      <dt>{{ t('k.location') }}</dt><dd>{{ i.city }}, {{ i.country }}</dd>
+      <dt>{{ t('k.network') }}</dt><dd>{{ i.asn }} · {{ i.isp }}</dd>
+      <dt>{{ t('k.ip_type') }}</dt><dd><span class="tag">{{ t('kind.' ~ i.kind) }}</span></dd>
+      <dt>{{ t('k.sticky') }}</dt><dd>{{ t('yes') if p.sticky else t('proxy.rotating') }}</dd>
+      <dt>{{ t('k.latency') }}</dt><dd>{{ p.latency_ms|join(' / ') }} ms</dd>
+    </dl>
+    {% else %}<p class="alert bad">{{ t('proxy.failed') }}: {{ p.error }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

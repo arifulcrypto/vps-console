@@ -1,0 +1,21 @@
+<form method="post" action="/admin/probes" class="stack">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="probe_id" value="{{ pid }}">
+  <div class="row">
+    <label>{{ t('k.name') }}<input name="name" required value="{{ pf.get('name', 'China probe') if pf else 'China probe' }}"></label>
+    <label>{{ t('field.region') }}<input name="region" value="{{ pf.get('region', '') if pf else '' }}" placeholder="Guangzhou"></label>
+  </div>
+  <label>{{ t('field.host') }}<input name="host" required value="{{ pf.get('host', '') if pf else '' }}"></label>
+  <div class="row">
+    <label>{{ t('field.ssh_port') }}<input name="port" inputmode="numeric" value="{{ pf.get('port', 22) if pf else 22 }}"></label>
+    <label>{{ t('field.ssh_user') }}<input name="username" value="{{ pf.get('username', 'root') if pf else 'root' }}"></label>
+  </div>
+  <fieldset class="seg compact">
+    <label class="opt"><input type="radio" name="auth_type" value="password" checked> {{ t('check.auth_password') }}</label>
+    <label class="opt"><input type="radio" name="auth_type" value="key"> {{ t('check.auth_key') }}</label>
+  </fieldset>
+  <label>{{ t('admin.secret') }}<textarea name="secret" rows="2" required autocomplete="off" spellcheck="false"></textarea></label>
+  <label class="check"><input type="checkbox" name="switch_to_key" value="1" checked> {{ t('admin.switch_key') }}</label>
+  <p class="hint">{{ t('admin.secret_hint') }}</p>
+  <button class="btn primary">{{ t('admin.verify_save') }}</button>
+</form>

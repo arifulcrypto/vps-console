@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('nav.login') }}</h1>
+{% if error %}<p class="alert bad">{{ t(error) }}</p>{% endif %}
+<form method="post" action="/login" class="stack narrow">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <label>{{ t('login.username') }}<input name="username" autocomplete="username" required value="admin"></label>
+  <label>{{ t('login.password') }}<input name="password" type="password" autocomplete="current-password" required></label>
+  <button class="btn primary">{{ t('nav.login') }}</button>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('dash.title') }}</h1>
+<section class="cards">
+  <a class="card link-card" href="/check"><h3>{{ t('nav.check') }}</h3><p>{{ t('home.check') }}</p></a>
+  <a class="card link-card" href="/generate"><h3>{{ t('nav.generate') }}</h3><p>{{ t('home.generate') }}</p></a>
+  <a class="card link-card" href="/convert"><h3>{{ t('nav.convert') }}</h3><p>{{ t('home.convert') }}</p></a>
+</section>
+<h2>{{ t('dash.probes') }}</h2>
+{% if probes %}
+<ul class="plain">{% for p in probes %}<li><span class="dot ok"></span> {{ p.name }} <span class="muted">{{ p.region }}</span></li>{% endfor %}</ul>
+{% else %}
+<p class="muted">{{ t('dash.no_probe') }} <a href="/admin">{{ t('nav.admin') }}</a></p>
+{% endif %}
+<h2>{{ t('dash.recent') }}</h2>
+{% include "partials/job_list.html" %}
+{% endblock %}

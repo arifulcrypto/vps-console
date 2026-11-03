@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('gen.done') }}</h1>
+{% if stored %}<p class="alert info">{{ t('gen.stored') }}</p>{% else %}<p class="alert warn">{{ t('gen.not_stored') }}</p>{% endif %}
+
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('gen.prompt') }}</h2>
+    <button class="btn small" data-copy="#prompt-text">{{ t('copy') }}</button></div>
+  <pre class="code" id="prompt-text">{{ bundle.prompt }}</pre>
+  {% if stored %}<a class="btn" href="/outputs/{{ out_id }}/prompt.md" download>{{ t('download') }} .md</a>{% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('gen.deploy_config') }}</h2>
+    <button class="btn small" data-copy="#deploy-json">{{ t('copy') }}</button></div>
+  <pre class="code" id="deploy-json">{{ bundle.deploy_config|tojson_pretty }}</pre>
+  {% if stored %}<a class="btn" href="/outputs/{{ out_id }}/deploy.json" download>{{ t('download') }} .json</a>{% endif %}
+</section>
+
+{% if bundle.lxc_config %}
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('gen.lxc_config') }}</h2>
+    <button class="btn small" data-copy="#lxc-json">{{ t('copy') }}</button></div>
+  <pre class="code" id="lxc-json">{{ bundle.lxc_config|tojson_pretty }}</pre>
+  {% if stored %}<a class="btn" href="/outputs/{{ out_id }}/lxc.json" download>{{ t('download') }} .json</a>{% endif %}
+</section>
+{% endif %}
+<p><a href="/generate">{{ t('gen.again') }}</a></p>
+{% endblock %}

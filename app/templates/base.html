@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="{{ 'zh-CN' if lang == 'zh' else 'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
+<title>{% block title %}{{ t('app.name') }}{% endblock %}</title>
+<link rel="stylesheet" href="/static/app.css?v={{ version }}">
+<link rel="icon" href="data:,">
+<script src="/static/htmx.min.js?v=2.0.4" defer></script>
+<script src="/static/app.js?v={{ version }}" defer></script>
+</head>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf }}"}'>
+<header class="top">
+  <a class="brand" href="/">{{ t('app.name') }}</a>
+  <nav class="lang">
+    {% if lang == 'zh' %}<a href="/lang/en?next={{ next_q }}">EN</a>{% else %}<a href="/lang/zh?next={{ next_q }}">中文</a>{% endif %}
+  </nav>
+</header>
+{% if admin %}
+<nav class="tabs" aria-label="main">
+  <a href="/check" class="{{ 'on' if path.startswith('/check') or path.startswith('/jobs') }}">{{ t('nav.check') }}</a>
+  <a href="/generate" class="{{ 'on' if path.startswith('/generate') }}">{{ t('nav.generate') }}</a>
+  <a href="/convert" class="{{ 'on' if path.startswith('/convert') }}">{{ t('nav.convert') }}</a>
+  <a href="/history" class="{{ 'on' if path.startswith('/history') or path.startswith('/outputs') }}">{{ t('nav.history') }}</a>
+  <a href="/admin" class="{{ 'on' if path.startswith('/admin') or path.startswith('/account') }}">{{ t('nav.admin') }}</a>
+</nav>
+{% endif %}
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer class="foot">
+  {% if admin %}
+  <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">{{ t('nav.logout') }}</button></form> ·
+  {% endif %}
+  <span class="muted">v{{ version }}</span>
+</footer>
+</body>
+</html>

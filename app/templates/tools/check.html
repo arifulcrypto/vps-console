@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('check.title') }}</h1>
+<p class="muted">{{ t('check.intro') }}</p>
+{% if error %}<p class="alert bad">{{ t('field.' ~ error.field) }}: {{ t('err.' ~ error.code) }}</p>{% endif %}
+<form method="post" action="/check" class="stack" id="check-form" data-remember-form="check"{% if form %} data-prefilled{% endif %}>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+
+  <fieldset class="seg">
+    <legend>{{ t('check.mode') }}</legend>
+    <label class="opt"><input type="radio" name="mode" value="quick" data-remember {{ 'checked' if form.get('mode', 'quick') == 'quick' }}>
+      <span><strong>{{ t('mode.quick') }}</strong><small>{{ t('check.quick_desc') }}</small></span></label>
+    <label class="opt"><input type="radio" name="mode" value="deep" data-remember {{ 'checked' if form.get('mode') == 'deep' }}>
+      <span><strong>{{ t('mode.deep') }}</strong><small>{{ t('check.deep_desc') }}</small></span></label>
+  </fieldset>
+
+  <h2>{{ t('check.server') }}</h2>
+  <label>{{ t('field.host') }}<input name="host" inputmode="url" autocomplete="off" placeholder="203.0.113.10" value="{{ form.get('host', '') }}" data-remember></label>
+  <div class="row">
+    <label>{{ t('field.ssh_port') }}<input name="ssh_port" inputmode="numeric" value="{{ form.get('ssh_port', '22') }}" data-remember></label>
+    <label>{{ t('field.ssh_user') }}<input name="ssh_user" autocomplete="off" value="{{ form.get('ssh_user', 'root') }}" data-remember></label>
+  </div>
+  <fieldset class="seg compact">
+    <legend>{{ t('check.auth') }}</legend>
+    <label class="opt"><input type="radio" name="auth" value="password" checked data-remember data-toggle="auth"> {{ t('check.auth_password') }}</label>
+    <label class="opt"><input type="radio" name="auth" value="key" data-remember data-toggle="auth"> {{ t('check.auth_key') }}</label>
+  </fieldset>
+  <label data-show="auth=password">{{ t('field.password') }}<input name="password" type="password" autocomplete="off"></label>
+  <label data-show="auth=key" hidden>{{ t('field.private_key') }}<textarea name="private_key" rows="4" autocomplete="off" spellcheck="false"></textarea></label>
+  <label class="check"><input type="checkbox" name="skip_ssh" value="1"> {{ t('check.skip_ssh') }}</label>
+  <p class="hint">{{ t('check.secret_note') }}</p>
+
+  <details>
+    <summary>{{ t('check.network') }}</summary>
+    <label>{{ t('field.ports') }}<input name="ports" placeholder="22, 443, 8443" value="{{ form.get('ports', '') }}" data-remember></label>
+    <p class="hint">{{ t('check.ports_hint') }}</p>
+    <label>{{ t('field.sni') }}<input name="sni" placeholder="www.example.com" value="{{ form.get('sni', '') }}" data-remember></label>
+    {% if probes %}
+    <label class="check"><input type="checkbox" name="use_probe" value="on" checked> {{ t('check.use_probe', name=probes[0].name) }}</label>
+    {% else %}
+    <p class="hint">{{ t('check.no_probe') }}</p>
+    {% endif %}
+  </details>
+
+  <details>
+    <summary>{{ t('check.cloudflare') }}</summary>
+    <label>{{ t('field.domain') }}<input name="domain" placeholder="node.example.com" value="{{ form.get('domain', '') }}" data-remember></label>
+    <label>{{ t('field.cf_token') }}<input name="cf_token" type="password" autocomplete="off"></label>
+    <p class="hint">{{ t('check.cf_hint') }}</p>
+  </details>
+
+  <details>
+    <summary>{{ t('check.proxies') }}</summary>
+    <label>{{ t('field.proxies') }}<textarea name="proxies" rows="3" autocomplete="off" spellcheck="false" placeholder="socks5://user:pass@host:port&#10;host:port:user:pass"></textarea></label>
+    <label>{{ t('field.proxy_scheme') }}
+      <select name="proxy_scheme" data-remember><option value="socks5">SOCKS5</option><option value="http">HTTP</option></select></label>
+    <p class="hint">{{ t('check.proxy_hint') }}</p>
+  </details>
+
+  <button class="btn primary big">{{ t('check.start') }}</button>
+</form>
+{% endblock %}

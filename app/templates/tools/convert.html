@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t('conv.title') }}</h1>
+<p class="muted">{{ t('conv.intro') }}</p>
+{% if error %}<p class="alert bad">{{ t('err.' ~ error.code) }}{% if error.detail %} – {{ error.detail }}{% endif %}</p>{% endif %}
+<form method="post" action="/convert" class="stack" data-remember-form="convert"{% if form %} data-prefilled{% endif %}>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>{{ t('field.links') }}<textarea name="links" rows="6" spellcheck="false" autocomplete="off" placeholder="vless://…&#10;hysteria2://…&#10;{{ t('conv.or_yaml') }}">{{ form.get('links', '') }}</textarea></label>
+  <label>{{ t('field.sub_urls') }}<textarea name="sub_urls" rows="2" spellcheck="false" autocomplete="off" placeholder="https://…">{{ form.get('sub_urls', '') }}</textarea></label>
+
+  <h2>{{ t('conv.output') }}</h2>
+  <fieldset class="seg compact">
+    <label class="opt"><input type="radio" name="target" value="mihomo" checked data-remember> {{ t('conv.t_mihomo') }}</label>
+    <label class="opt"><input type="radio" name="target" value="provider" data-remember> {{ t('conv.t_provider') }}</label>
+  </fieldset>
+  <label>{{ t('field.title') }}<input name="title" value="{{ form.get('title', '') }}" placeholder="{{ t('conv.title_ph') }}"></label>
+  <label class="check"><input type="checkbox" name="publish" value="1" data-remember> {{ t('conv.publish') }}</label>
+
+  <details open>
+    <summary>{{ t('conv.nodes') }}</summary>
+    <label>{{ t('field.include') }}<input name="include" placeholder="HK|JP|SG" value="{{ form.get('include', '') }}" data-remember></label>
+    <label>{{ t('field.exclude') }}<input name="exclude" placeholder="{{ t('conv.exclude_ph') }}" value="{{ form.get('exclude', '') }}" data-remember></label>
+    <label>{{ t('field.renames') }}<textarea name="renames" rows="2" placeholder="Hong Kong->HK&#10;^\[.*?\]\s*->" data-remember>{{ form.get('renames', '') }}</textarea></label>
+    <label>{{ t('field.prefix') }}<input name="prefix" value="{{ form.get('prefix', '') }}" data-remember></label>
+    <label class="check"><input type="checkbox" name="add_flags" value="1" data-remember> {{ t('conv.flags') }}</label>
+    <label class="check"><input type="checkbox" name="dedupe" value="1" checked data-remember> {{ t('conv.dedupe') }}</label>
+    <label class="check"><input type="checkbox" name="sort" value="1" data-remember> {{ t('conv.sort') }}</label>
+    <label>{{ t('field.residential_pattern') }}<input name="residential_pattern" value="{{ form.get('residential_pattern', '住宅|家宽|residential|resi|isp|relay|中转') }}" data-remember></label>
+    <p class="hint">{{ t('conv.resi_hint') }}</p>
+  </details>
+
+  <details>
+    <summary>{{ t('conv.groups') }}</summary>
+    <fieldset class="seg compact">
+      <label class="opt"><input type="radio" name="groups" value="full" checked data-remember> {{ t('conv.g_full') }}</label>
+      <label class="opt"><input type="radio" name="groups" value="region" data-remember> {{ t('conv.g_region') }}</label>
+      <label class="opt"><input type="radio" name="groups" value="simple" data-remember> {{ t('conv.g_simple') }}</label>
+    </fieldset>
+    <label class="check"><input type="checkbox" name="china_direct" value="1" checked data-remember> {{ t('conv.china_direct') }}</label>
+    <label class="check"><input type="checkbox" name="ai_group" value="1" checked data-remember> {{ t('conv.ai') }}</label>
+    <label class="check"><input type="checkbox" name="streaming_group" value="1" data-remember> {{ t('conv.streaming') }}</label>
+    <label class="check"><input type="checkbox" name="telegram_group" value="1" data-remember> {{ t('conv.telegram') }}</label>
+    <label class="check"><input type="checkbox" name="block_ads" value="1" data-remember> {{ t('conv.ads') }}</label>
+  </details>
+
+  <details>
+    <summary>{{ t('conv.advanced') }}</summary>
+    <label>{{ t('field.dns_mode') }}<select name="dns_mode" data-remember><option value="fake-ip">fake-ip</option><option value="redir-host">redir-host</option></select></label>
+    <label class="check"><input type="checkbox" name="ipv6" value="1" data-remember> IPv6</label>
+    <label>{{ t('field.mixed_port') }}<input name="mixed_port" inputmode="numeric" value="7890" data-remember></label>
+    <label class="check"><input type="checkbox" name="allow_lan" value="1" data-remember> {{ t('conv.allow_lan') }}</label>
+    <label class="check"><input type="checkbox" name="mlkem" value="1" checked data-remember> {{ t('conv.mlkem') }}</label>
+    <label>{{ t('field.user_agent') }}<input name="user_agent" value="clash-verge/v2.5.8" data-remember></label>
+    <label>{{ t('field.out_lang') }}<select name="out_lang" data-remember><option value="en">English</option><option value="zh">中文</option></select></label>
+  </details>
+
+  <button class="btn primary big">{{ t('conv.go') }}</button>
+</form>
+{% endblock %}

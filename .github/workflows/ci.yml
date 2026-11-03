@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Compile
+        run: python -m compileall -q app
+      - name: Tests
+        run: pytest
+      - name: Start the real server
+        run: |
+          export VPSC_DATA_DIR="$RUNNER_TEMP/vpsc" VPSC_VERSION="$GITHUB_SHA"
+          python -m app.cli set-admin --username ci > /dev/null
+          uvicorn --factory app.main:get_app --port 8091 &
+          for i in $(seq 1 20); do sleep 1; curl -fsS http://127.0.0.1:8091/healthz && break; done
+          curl -fsS http://127.0.0.1:8091/healthz | grep -q "$GITHUB_SHA"
+          curl -fsS http://127.0.0.1:8091/ | grep -q "VPS Console"
+          curl -fsS -o /dev/null http://127.0.0.1:8091/static/htmx.min.js
+
+  deploy:
+    needs: test
+    # Enabled once the server has the restricted deploy key (repo variable DEPLOY_ENABLED=true).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Deploy over the restricted SSH key
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -p "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes "root@$HOST" "deploy $GITHUB_SHA"
+      - name: Check the public site
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS "$SITE_URL/healthz" | grep -q "$GITHUB_SHA" && exit 0
+            sleep 3
+          done
+          echo "public site does not report $GITHUB_SHA" >&2
+          exit 1
