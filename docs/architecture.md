@@ -72,3 +72,9 @@ That script checks out the exact commit (must be on `origin/main`), installs
 requirements into the conda env `/opt/vps-console/env`, restarts the service,
 checks `/healthz` reports the new commit, and rolls back otherwise.
 See `deploy/`.
+
+The deploy job runs only when the repository variable `DEPLOY_ENABLED` is
+`true`. Enable it after adding the key to root's `authorized_keys` as
+`restrict,command="/usr/local/sbin/vps-console-deploy" <public key>`.
+`/usr/local/sbin/vps-console-deploy` is a copy installed by `bootstrap.sh`, so
+re-run bootstrap (or copy `deploy/deploy.sh`) when that script changes.

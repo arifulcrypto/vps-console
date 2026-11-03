@@ -19,6 +19,19 @@
   filters, renames, flags, dedupe, group templates, rule toggles, DNS options;
   YAML, share links, QR codes, hosted subscription URL.
 - History with downloads (Markdown/JSON reports, prompt, configs, YAML, links).
+- Findings for databases and admin panels open to the internet, and for Docker
+  ports that bypass UFW.
+
+## Live test (2026-11-03)
+
+- Quick and deep checks ran through the public site against a Guangzhou VPS
+  (SSH facts, 9 carrier routes) and a Los Angeles VPS (network only, from the
+  China probe and Globalping). The forward route showed ChinaNet 163 → Cogent,
+  matching the expected path.
+- The first run found four bugs, all fixed with regression tests: KVM read as a
+  container, failed TLS read as success, BBR module not detected, closed ports
+  shown as reachable.
+- Generated prompts and the admin page were checked for leaked secrets: none.
 
 ## Next
 
@@ -30,6 +43,10 @@
 - Per-port history graph of China reachability.
 
 ## Known limits
+
+- Automatic deploys from CI are switched off until the restricted deploy key is
+  added on the server (see `docs/architecture.md`, Deployment). Until then,
+  deploy with `/usr/local/sbin/vps-console-deploy deploy <sha>` on the server.
 
 - Globalping has few probes in China; results may be empty.
 - ip-api network type is a hint, not proof.
