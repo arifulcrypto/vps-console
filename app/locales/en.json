@@ -194,7 +194,7 @@
   "verdict.ip_blocked": "IP blocked in China: nothing answers from China, but it works from abroad.",
   "verdict.port_blocked": "Port blocked in China: {ports}. Other ports work.",
   "verdict.tls_interference": "TLS cut in China on {ports}: TCP connects but the handshake fails.",
-  "verdict.reachable": "Reachable from China on every tested port.",
+  "verdict.reachable": "Reachable from China on every port that answers from abroad.",
   "gp.unreachable": "Globalping API unreachable.",
   "gp.no_probes": "No Globalping probes available in China right now.",
   "gp.rate_limited": "Globalping limit reached. Add a token under Admin.",
@@ -365,5 +365,6 @@
   "delete": "Delete",
   "save": "Save",
   "confirm_delete": "Delete this?",
-  "err.unresolvable": "does not resolve"
+  "err.unresolvable": "does not resolve",
+  "job.closed": "Closed everywhere (nothing listens, not a block): {ports}"
 }

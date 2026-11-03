@@ -105,6 +105,7 @@
   <h2>{{ t('job.reach') }}</h2>
   <p class="verdict {{ 'ok' if rc.verdict == 'reachable' else ('info' if rc.verdict == 'no_china_data' else 'bad') }}">
     {{ t('verdict.' ~ rc.verdict, ports=rc.ports|join(', ')) }}</p>
+  {% if rc.closed %}<p class="hint">{{ t('job.closed', ports=rc.closed|join(', ')) }}</p>{% endif %}
   {% if rc.probe_error %}<p class="alert warn">{{ t('job.probe_error') }}: {{ t('ssh.' ~ rc.probe_error) }}</p>{% endif %}
   <table class="tbl">
     <thead><tr><th></th><th>{{ t('job.abroad') }}</th><th>{{ t('job.china') }}{% if rc.china %} <span class="muted small">({{ rc.china.source }})</span>{% endif %}</th></tr></thead>

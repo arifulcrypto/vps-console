@@ -188,3 +188,25 @@ def test_manual_links():
     urls = [x["url"] for x in links]
     assert "https://www.itdog.cn/tcping/203.0.113.10:443" in urls
     assert any(u.startswith("https://tcp.ping.pe/") for u in urls)
+
+
+def test_virt_first_line_and_bbr_module():
+    text = SAMPLE.replace("@@container\nnone\n", "@@container\nnone\n") + "@@bbrmod\n/lib/modules/5.4/tcp_bbr.ko\n"
+    f = parse_facts(text)
+    assert f["virt"] == "kvm" and f["container"] == "none"
+    assert assess.lxd_plan(f)["possible"] is True
+    f["net"]["available_cc"] = ["reno", "cubic"]
+    codes = {x["code"] for x in assess.assess(f, today=dt.date(2026, 11, 3))}
+    assert "bbr_off" in codes and "bbr_missing" not in codes
+
+
+def test_closed_ports_are_not_blocks():
+    abroad = _abroad({"22": 10.0, "443": None})
+    china = {"icmp": {"ok": True}, "ports": {"22": 40.0, "443": None}, "tls": {}}
+    v = reach.classify(abroad, china)
+    assert v["verdict"] == "reachable" and v["closed"] == ["443"]
+
+
+def test_tls_check_ignores_failed_handshake():
+    script = reach.probe_script("203.0.113.10", [22], {22: ""})
+    assert "Cipher is [A-Z]" in script and "Protocol version" not in script

@@ -14,8 +14,8 @@ sec(){ echo "@@$1"; }
 v(){ k="$1"; shift; printf '%s=%s\n' "$k" "$("$@" 2>&1 | head -n1)"; }
 sec os; cat /etc/os-release 2>/dev/null
 sec kernel; uname -r; uname -m
-sec virt; systemd-detect-virt 2>/dev/null || echo unknown
-sec container; systemd-detect-virt -c 2>/dev/null || echo none
+sec virt; systemd-detect-virt 2>/dev/null | head -n1
+sec container; systemd-detect-virt -c 2>/dev/null | head -n1
 sec cpu; nproc; grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2-
 sec mem; free -b
 sec swap; swapon --show=NAME,SIZE,USED --bytes --noheadings 2>/dev/null
@@ -26,6 +26,7 @@ sec net
 for k in net.ipv4.tcp_congestion_control net.core.default_qdisc net.ipv4.tcp_available_congestion_control; do
   sysctl -n "$k" 2>/dev/null
 done
+sec bbrmod; { modinfo -n tcp_bbr || ls /lib/modules/"$(uname -r)"/kernel/net/ipv4/tcp_bbr.ko*; } 2>/dev/null | head -n1
 sec ip; ip -o addr show scope global 2>/dev/null | awk '{print $2, $3, $4}'
 sec listen; ss -H -ltnup 2>/dev/null
 sec services
@@ -71,6 +72,11 @@ def split_sections(output: str) -> dict[str, str]:
 
 def _lines(text: str) -> list[str]:
     return [line for line in text.splitlines() if line.strip()]
+
+
+def _first(text: str, default: str) -> str:
+    lines = _lines(text)
+    return lines[0].strip() if lines else default
 
 
 def _int(value: str, default: int = 0) -> int:
@@ -201,8 +207,8 @@ def parse_facts(output: str) -> dict:
         "os": parse_os_release(s.get("os", "")),
         "kernel": kernel_lines[0] if kernel_lines else "",
         "arch": kernel_lines[1] if len(kernel_lines) > 1 else "",
-        "virt": (s.get("virt", "unknown").strip() or "unknown"),
-        "container": (s.get("container", "none").strip() or "none"),
+        "virt": _first(s.get("virt", ""), "unknown"),
+        "container": _first(s.get("container", ""), "none"),
         "cpu": {
             "count": _int(cpu_lines[0]) if cpu_lines else 0,
             "model": cpu_lines[1].strip() if len(cpu_lines) > 1 else "",
@@ -217,6 +223,7 @@ def parse_facts(output: str) -> dict:
             "cc": net[0] if net else "",
             "qdisc": net[1] if len(net) > 1 else "",
             "available_cc": net[2].split() if len(net) > 2 else [],
+            "bbr_module": bool(s.get("bbrmod", "").strip()),
         },
         "ips": parse_ips(s.get("ip", "")),
         "listeners": parse_listeners(s.get("listen", "")),

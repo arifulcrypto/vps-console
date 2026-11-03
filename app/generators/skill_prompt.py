@@ -157,7 +157,8 @@ def _fact_lines(check: dict | None) -> list[str]:
         disk = facts.get("disk", {}).get("avail", 0) / 1024**3
         lines.append(f"- System: {os_name}, kernel {facts.get('kernel', '?')}, {facts.get('virt', '?')}, "
                      f"{facts.get('cpu', {}).get('count', '?')} vCPU, {mem:.1f} GB RAM, {disk:.0f} GB disk free")
-        busy = [f"{i['port']}/{i['proto']} ({i['process'] or '?'})" for i in facts.get("listeners", []) if i["public"]]
+        busy = list(dict.fromkeys(f"{i['port']}/{i['proto']} ({i['process'] or '?'})"
+                                  for i in facts.get("listeners", []) if i["public"]))
         if busy:
             lines.append("- Public ports already in use: " + ", ".join(busy[:20]))
         if facts.get("versions"):

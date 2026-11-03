@@ -74,7 +74,7 @@ def probe_script(host: str, ports: list[int], tls_ports: dict[int, str]) -> str:
         s = shlex.quote(sni or host)
         lines.append(
             f"r=$(timeout 7 openssl s_client -connect {h}:{int(p)} -servername {s} </dev/null 2>&1); "
-            f"if echo \"$r\" | grep -q 'BEGIN CERTIFICATE\\|Protocol version\\|Cipher is'; "
+            f"if echo \"$r\" | grep -q 'BEGIN CERTIFICATE\\|Cipher is [A-Z]'; "
             f"then echo \"TLS {int(p)} ok\"; "
             f"elif echo \"$r\" | grep -qi 'reset\\|errno=104'; then echo \"TLS {int(p)} reset\"; "
             f"else echo \"TLS {int(p)} fail\"; fi"
@@ -106,18 +106,20 @@ def classify(abroad: dict, china: dict | None, tls_abroad: dict | None = None) -
     if not china:
         return {"verdict": "no_china_data", "ports": []}
     china_open = {p for p, ms in china["ports"].items() if ms is not None}
+    closed = sorted((p for p, ms in abroad["ports"].items() if ms is None and p in china["ports"]
+                     and china["ports"][p] is None), key=int)
     china_icmp = china["icmp"].get("ok")
     blocked = sorted(abroad_open - china_open, key=int)
     if abroad_open and not china_open and not china_icmp:
         return {"verdict": "ip_blocked", "ports": blocked}
     if blocked:
-        return {"verdict": "port_blocked", "ports": blocked}
+        return {"verdict": "port_blocked", "ports": blocked, "closed": closed}
     cut = sorted((p for p, state in china.get("tls", {}).items()
                   if state in ("reset", "fail") and p in china_open
                   and (tls_abroad is None or tls_abroad.get(p, "ok") == "ok")), key=int)
     if cut:
-        return {"verdict": "tls_interference", "ports": cut}
-    return {"verdict": "reachable", "ports": []}
+        return {"verdict": "tls_interference", "ports": cut, "closed": closed}
+    return {"verdict": "reachable", "ports": [], "closed": closed}
 
 
 def manual_links(host: str, ports: list[int]) -> list[dict]:

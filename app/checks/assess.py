@@ -122,7 +122,7 @@ def assess(facts: dict, today: dt.date | None = None) -> list[dict]:
     net = facts["net"]
     if net.get("cc") == "bbr":
         out.append(finding("ok", "bbr_on"))
-    elif "bbr" in net.get("available_cc", []):
+    elif "bbr" in net.get("available_cc", []) or net.get("bbr_module"):
         out.append(finding("warn", "bbr_off", cc=net.get("cc", "?")))
     else:
         out.append(finding("warn", "bbr_missing", cc=net.get("cc", "?")))

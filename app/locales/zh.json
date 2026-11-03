@@ -194,7 +194,7 @@
   "verdict.ip_blocked": "IP 被墙：国内全部不通，海外正常。",
   "verdict.port_blocked": "端口被墙：{ports}。其他端口正常。",
   "verdict.tls_interference": "TLS 被阻断（{ports}）：TCP 能连上但握手失败。",
-  "verdict.reachable": "国内所有测试端口都能连通。",
+  "verdict.reachable": "海外能通的端口，国内全部能通。",
   "gp.unreachable": "无法连接 Globalping API。",
   "gp.no_probes": "Globalping 目前没有可用的国内探针。",
   "gp.rate_limited": "已达 Globalping 限额。可在“管理”中添加令牌。",
@@ -365,5 +365,6 @@
   "delete": "删除",
   "save": "保存",
   "confirm_delete": "确定删除？",
-  "err.unresolvable": "无法解析"
+  "err.unresolvable": "无法解析",
+  "job.closed": "各地都不通（没有服务监听，不是被墙）：{ports}"
 }
