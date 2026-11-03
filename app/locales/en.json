@@ -366,5 +366,7 @@
   "save": "Save",
   "confirm_delete": "Delete this?",
   "err.unresolvable": "does not resolve",
-  "job.closed": "Closed everywhere (nothing listens, not a block): {ports}"
+  "job.closed": "Closed everywhere (nothing listens, not a block): {ports}",
+  "f.exposed_service": "Port {port} ({what}, {process}) is open to the internet. Bind it to 127.0.0.1 or firewall it.",
+  "f.docker_bypasses_ufw": "Docker publishes ports past UFW: ufw rules don't protect them. Publish as 127.0.0.1:port or use DOCKER-USER rules."
 }

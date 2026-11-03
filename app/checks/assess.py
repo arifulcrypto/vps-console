@@ -15,6 +15,13 @@ MB = 1024**2
 # or the CDN node, 2096 for the panel subscription.
 SKILL_PORTS = {80: "http01", 443: "https", 2096: "sub"}
 
+# Services that should not face the internet. Docker-published ports bypass UFW.
+RISKY_PORTS = {
+    111: "rpcbind", 2375: "Docker API", 3306: "MySQL", 3389: "RDP", 5432: "PostgreSQL", 5900: "VNC",
+    6379: "Redis", 9200: "Elasticsearch", 11211: "Memcached", 27017: "MongoDB", 10086: "1Panel",
+    8888: "BT panel",
+}
+
 LEGACY_HINTS = {
     "/etc/caddy/233boy": "233boy script (Caddy + Xray/V2Ray)",
     "/etc/v2ray": "V2Ray",
@@ -133,6 +140,15 @@ def assess(facts: dict, today: dt.date | None = None) -> list[dict]:
         users = sorted({i["process"] or "?" for i in public if i["port"] == port and i["proto"] == "tcp"})
         if users:
             out.append(finding("warn", f"port_{purpose}_busy", port=port, process=", ".join(users)))
+
+    # Databases and admin services open to the internet
+    risky = sorted({(i["port"], i["process"] or "?") for i in public
+                    if i["proto"] == "tcp" and i["port"] in RISKY_PORTS})
+    for port, process in risky:
+        out.append(finding("warn", "exposed_service", port=port, what=RISKY_PORTS[port], process=process))
+    if risky and any(p == "docker-proxy" for _, p in risky) and \
+            facts.get("services", {}).get("ufw", {}).get("active") == "active":
+        out.append(finding("warn", "docker_bypasses_ufw"))
 
     # Existing proxy stacks and web servers
     for path in facts.get("legacy_paths", []):

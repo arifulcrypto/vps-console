@@ -54,7 +54,7 @@ async def check_start(
     cf_token: str = Form(""),
     proxies: str = Form(""),
     proxy_scheme: str = Form("socks5"),
-    use_probe: str = Form("on"),
+    use_probe: str = Form(""),
 ):
     db = request.app.state.db
     form = {"mode": mode, "host": host, "ssh_port": ssh_port, "ssh_user": ssh_user, "ports": ports,

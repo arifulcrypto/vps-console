@@ -29,7 +29,7 @@ prev="$(git rev-parse HEAD)"
 
 activate() {
   git checkout --quiet --detach "$1"
-  "$PIP" install --quiet --disable-pip-version-check -r requirements.txt
+  "$PIP" install --quiet --disable-pip-version-check --root-user-action=ignore -r requirements.txt
   echo "VPSC_VERSION=$1" > /etc/vps-console/version.env
   systemctl restart vps-console
 }

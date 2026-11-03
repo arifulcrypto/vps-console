@@ -366,5 +366,7 @@
   "save": "保存",
   "confirm_delete": "确定删除？",
   "err.unresolvable": "无法解析",
-  "job.closed": "各地都不通（没有服务监听，不是被墙）：{ports}"
+  "job.closed": "各地都不通（没有服务监听，不是被墙）：{ports}",
+  "f.exposed_service": "{port} 端口（{what}，{process}）对公网开放。请绑定到 127.0.0.1 或用防火墙限制。",
+  "f.docker_bypasses_ufw": "Docker 映射的端口会绕过 UFW，ufw 规则对它们无效。请映射为 127.0.0.1:端口，或使用 DOCKER-USER 规则。"
 }

@@ -210,3 +210,13 @@ def test_closed_ports_are_not_blocks():
 def test_tls_check_ignores_failed_handshake():
     script = reach.probe_script("203.0.113.10", [22], {22: ""})
     assert "Cipher is [A-Z]" in script and "Protocol version" not in script
+
+
+def test_exposed_services_and_docker_ufw():
+    f = parse_facts(SAMPLE)
+    f["listeners"].append({"proto": "tcp", "addr": "0.0.0.0", "port": 6379, "process": "docker-proxy", "public": True})
+    f["listeners"].append({"proto": "tcp", "addr": "127.0.0.1", "port": 3306, "process": "mysqld", "public": False})
+    found = assess.assess(f, today=dt.date(2026, 11, 3))
+    exposed = [x for x in found if x["code"] == "exposed_service"]
+    assert [x["params"]["port"] for x in exposed] == [6379]
+    assert any(x["code"] == "docker_bypasses_ufw" for x in found)

@@ -17,7 +17,7 @@ install -d -o root -g vpsconsole -m 750 /etc/vps-console
 
 [ -d "$APP/src/.git" ] || git clone --quiet "$REPO" "$APP/src"
 [ -x "$APP/env/bin/python" ] || "$CONDA" create -y -q -p "$APP/env" python=3.12
-"$APP/env/bin/pip" install --quiet --disable-pip-version-check -r "$APP/src/requirements.txt"
+"$APP/env/bin/pip" install --quiet --disable-pip-version-check --root-user-action=ignore -r "$APP/src/requirements.txt"
 
 secret_file() {
   local path="$1" value="$2"
